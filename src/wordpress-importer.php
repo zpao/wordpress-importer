@@ -960,16 +960,26 @@ class WP_Import extends WP_Importer {
 
 		// remap resized image URLs, works by stripping the extension and remapping the URL stub.
 		if ( preg_match( '!^image/!', $info['type'] ) ) {
-			$parts = pathinfo( $url );
+			$parts = $this->url_pathinfo( $url );
 			$name = basename( $parts['basename'], ".{$parts['extension']}" ); // PATHINFO_FILENAME in PHP 5.2
 
-			$parts_new = pathinfo( $upload['url'] );
+			$parts_new = $this->url_pathinfo( $upload['url'] );
 			$name_new = basename( $parts_new['basename'], ".{$parts_new['extension']}" );
 
 			$this->url_remap[$parts['dirname'] . '/' . $name] = $parts_new['dirname'] . '/' . $name_new;
 		}
 
 		return $post_id;
+	}
+
+	function url_basename( $url ) {
+		$parts = explode( '?', basename( $url ) );
+		return array_shift( $parts );
+	}
+
+	function url_pathinfo( $url ) {
+		$parts = explode( '?', $url );
+		return pathinfo( array_shift( $parts ) );
 	}
 
 	/**
@@ -981,7 +991,7 @@ class WP_Import extends WP_Importer {
 	 */
 	function fetch_remote_file( $url, $post ) {
 		// extract the file name and extension from the url
-		$file_name = basename( $url );
+		$file_name = $this->url_basename( $url );
 
 		// get placeholder file in the upload dir with a unique, sanitized filename
 		$upload = wp_upload_bits( $file_name, 0, '', $post['upload_date'] );
